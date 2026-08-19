@@ -1,0 +1,16 @@
+fastapi
+uvicorn
+motor
+pymongo
+pydantic
+pydantic-settings
+python-multipart
+requests
+beautifulsoup4
+playwright
+crawl4ai
+spacy
+pillow
+huggingface_hub
+python-dotenv
+pytest
