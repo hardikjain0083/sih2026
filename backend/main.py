@@ -105,10 +105,11 @@ async def scan_listing(request: ScanRequest, db: Database = Depends(get_db)):
         
     try:
         # 1. Scrape the URL
-        listing_dict = await scraper.scrape_listing(request.url)
+        active_scraper = ListingScraper()
+        listing_dict = await active_scraper.scrape_listing(request.url)
         
-        # Combine bullet points, description, title for NLP
-        raw_text_parts = listing_dict.get("bullet_points", []) + [listing_dict.get("description", ""), listing_dict.get("title", "")]
+        # Combine title, description, bullet points for NLP (title on line 1)
+        raw_text_parts = [listing_dict.get("title", ""), listing_dict.get("description", "")] + listing_dict.get("bullet_points", [])
         raw_text = "\n".join(filter(None, raw_text_parts))
         listing_dict["raw_text"] = raw_text
         
@@ -152,7 +153,14 @@ async def scan_listing(request: ScanRequest, db: Database = Depends(get_db)):
             field_check_docs.append(fc.to_dict())
             
         if field_check_docs:
-            db.field_checks.insert_many(field_check_docs)
+            for fcd in field_check_docs:
+                fcd_copy = dict(fcd)
+                fcd_copy.pop("_id", None)
+                db.field_checks.update_one(
+                    {"listing_id": listing_id, "field_name": fcd_copy["field_name"]},
+                    {"$set": fcd_copy, "$setOnInsert": {"_id": fcd["_id"]}},
+                    upsert=True
+                )
             
         scan_history_doc = ScanHistoryDoc(
             listing_id=listing_id,

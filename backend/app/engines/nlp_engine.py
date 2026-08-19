@@ -111,7 +111,7 @@ class NLPEngine:
                 extracted["manufacturer"] = mfg_val
         if not extracted["manufacturer"]:
             # Fallback to spaCy ORG entity ignoring obvious non-brand categories
-            ignore_orgs = ["grocery & gourmet foods", "amazon", "flipkart", "food products", "namkeen", "main content", "customer care", "mirp", "country of origin"]
+            ignore_orgs = ["grocery & gourmet foods", "amazon", "amazon.in", "flipkart", "food products", "namkeen", "main content", "customer care", "mirp", "country of origin"]
             for ent in doc.ents:
                 if ent.label_ == "ORG" and ent.text.strip().lower() not in ignore_orgs and not re.search(r"\d", ent.text):
                     extracted["manufacturer"] = ent.text.strip()
@@ -138,35 +138,21 @@ class NLPEngine:
             extracted["customer_care"] = " | ".join(contacts)
 
         # 6. product_name
-        # First check clean non-numeric title lines
         if clean_lines:
-            for l in clean_lines[:5]:
-                l_lower = l.lower()
-                # Ignore lines that look like price, net wt, manufacturer or nav headers
-                if any(skip in l_lower for skip in ["mrp", "mirp", "net wt", "manufactured by", "mfd by", "country of origin", "customer care", "buy", "online", "price in india", "home"]):
-                    continue
-                # Ignore lines that contain digits/prices (like 'PS 349.00' or '340 ml')
-                if re.search(r"\d", l):
-                    continue
-                if len(l.split()) >= 1:
-                    words = l.split()
-                    extracted["product_name"] = " ".join(words[:10])
-                    break
-
-        if not extracted["product_name"]:
-            for ent in doc.ents:
-                if ent.label_ in ["PRODUCT", "WORK_OF_ART"]:
-                    extracted["product_name"] = ent.text.strip()
-                    break
-
-        if not extracted["product_name"]:
-            for l in clean_lines:
-                if not re.search(r"\d", l) and len(l.strip()) > 2 and not any(k in l.lower() for k in ["manufactured", "country", "customer"]):
-                    extracted["product_name"] = l.strip()
-                    break
-        if not extracted["product_name"] and clean_lines:
-            words = clean_lines[0].split()
-            extracted["product_name"] = " ".join(words[:8])
+            # Line 1 of scraped text is always the primary page title
+            first_line = clean_lines[0].strip()
+            if first_line and not any(skip in first_line.lower() for skip in ["skip to", "javascript", "cookies", "main content"]):
+                words = first_line.split()
+                extracted["product_name"] = " ".join(words[:12])
+            else:
+                for l in clean_lines[:5]:
+                    l_lower = l.lower()
+                    if any(skip in l_lower for skip in ["mrp", "mirp", "net wt", "manufactured by", "mfd by", "country of origin", "customer care", "buy", "online", "price in india", "home"]):
+                        continue
+                    if len(l.split()) >= 1:
+                        words = l.split()
+                        extracted["product_name"] = " ".join(words[:12])
+                        break
 
         # 7. dimensions
         dim_match = re.search(r"(\d+(?:\.\d+)?)\s*[xX*]\s*(\d+(?:\.\d+)?)\s*(?:[xX*]\s*(\d+(?:\.\d+)?))?\s*(cm|mm|m|inch|inches)", cleaned_text, re.IGNORECASE)

@@ -117,7 +117,7 @@ def test_vlm():
     img.save(buf, format="JPEG")
     b64 = base64.b64encode(buf.getvalue()).decode()
 
-    client = InferenceClient(provider="hf-inference", api_key=hf_token)
+    client = InferenceClient(api_key=hf_token)
     prompt = (
         "Extract all text from this product label image. "
         "Return ONLY a JSON object with keys: product_name, net_quantity, mrp, "
@@ -135,7 +135,7 @@ def test_vlm():
 
     try:
         response = client.chat.completions.create(
-            model="Qwen/Qwen2.5-VL-7B-Instruct",
+            model="Qwen/Qwen2.5-VL-72B-Instruct",
             messages=messages,
             max_tokens=400,
             temperature=0.1,

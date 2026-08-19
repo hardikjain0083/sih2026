@@ -17,10 +17,9 @@ class OCREngine:
     def __init__(self):
         # Initialize inference client using the configured HF token
         self.client = InferenceClient(
-            provider="hf-inference",
             api_key=settings.hf_token
         )
-        self.model = "Qwen/Qwen2.5-VL-7B-Instruct"
+        self.model = "Qwen/Qwen2.5-VL-72B-Instruct"
         
         self.expected_keys = [
             "product_name", 
@@ -54,7 +53,8 @@ class OCREngine:
                 with open(image_url, "rb") as f:
                     content = f.read()
             else:
-                response = requests.get(image_url, timeout=10)
+                headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"}
+                response = requests.get(image_url, headers=headers, timeout=6)
                 response.raise_for_status()
                 content = response.content
             
