@@ -14,3 +14,4 @@ pillow
 huggingface_hub
 python-dotenv
 pytest
+curl_cffi
