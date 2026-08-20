@@ -50,8 +50,12 @@ app = FastAPI(title="SuRaksha MAPS API", lifespan=lifespan)
 # Allow React localhost access
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:5173"],
-    allow_credentials=True,
+    allow_origins=[
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost:5173",
+    "https://sih2026-frontend-7d428lei9-atharv-porwals-projects.vercel.app"
+    ],allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -107,7 +111,11 @@ async def scan_listing(request: ScanRequest, db: Database = Depends(get_db)):
         # 1. Scrape the URL
         active_scraper = ListingScraper()
         listing_dict = await active_scraper.scrape_listing(request.url)
-        
+        logger.info(f"SCRAPER RESULT TITLE: {listing_dict.get('title')}")
+        logger.info(f"SCRAPER RESULT MRP: {listing_dict.get('mrp')}")
+        logger.info(f"SCRAPER RESULT PRICE: {listing_dict.get('price')}")
+        logger.info(f"SCRAPER RESULT IMAGE URL: {listing_dict.get('image_url')}")
+        logger.info(f"SCRAPER RESULT IMAGE URLS: {listing_dict.get('image_urls')}")
         # Combine title, description, bullet points for NLP (title on line 1)
         raw_text_parts = [listing_dict.get("title", ""), listing_dict.get("description", "")] + listing_dict.get("bullet_points", [])
         raw_text = "\n".join(filter(None, raw_text_parts))
