@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://localhost:8000',
+  baseURL: 'https://suraksha-maps-api-2026.onrender.com',
 });
 
 api.interceptors.response.use(
